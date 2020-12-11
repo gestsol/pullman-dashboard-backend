@@ -1,20 +1,11 @@
-# PullmanDashboard
+# Pullman Dashboard Backend
 
-To start your Phoenix server:
+## Sobre el proyecto 
+El proyecto provee datos KPI  para analizar los servicios en tiempo real. 
 
-  * Install dependencies with `mix deps.get`
-  * Create and migrate your database with `mix ecto.setup`
-  * Install Node.js dependencies with `npm install` inside the `assets` directory
-  * Start Phoenix endpoint with `mix phx.server`
-
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
-
-Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
-
-## Learn more
-
-  * Official website: https://www.phoenixframework.org/
-  * Guides: https://hexdocs.pm/phoenix/overview.html
-  * Docs: https://hexdocs.pm/phoenix
-  * Forum: https://elixirforum.com/c/phoenix-forum
-  * Source: https://github.com/phoenixframework/phoenix
+## Detalles generales del back-end
+1. Back-end recibe petición REST desde front-end. 
+2. Datos obtenidos en: (1), se utilizan para preparar peticiones REST 
+3. Los datos obtenidos en: (2) se procesan para generar KPI de interes, al momento:
+ * Tasa de ocupación de servicios por tipo (cama o semicama).
+4. Con los datos de (3) devolvemos los KPI calculados al front-end.
