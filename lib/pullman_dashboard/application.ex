@@ -8,7 +8,7 @@ defmodule PullmanDashboard.Application do
   def start(_type, _args) do
     children = [
       # Start the Ecto repository
-      PullmanDashboard.Repo,
+      #PullmanDashboard.Repo,
       # Start the Telemetry supervisor
       PullmanDashboardWeb.Telemetry,
       # Start the PubSub system
