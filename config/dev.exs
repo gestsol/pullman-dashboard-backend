@@ -21,7 +21,7 @@ config :pullman_dashboard, PullmanDashboardWeb.Endpoint,
     port: 443,
     cipher_suite: :strong,
     keyfile: "/home/ubuntu/certificate/privkey.pem",
-    certfile: "/home/ubuntu/certificate/fullchain.pem "
+    certfile: "/home/ubuntu/certificate/fullchain.pem"
   ],
   debug_errors: true,
   code_reloader: true,
