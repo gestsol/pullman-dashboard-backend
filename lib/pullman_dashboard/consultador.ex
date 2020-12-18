@@ -22,6 +22,11 @@ defmodule PullmanDashboard.Consultador do
     |> calcular_tasa_ocupacion
   end
 
+  def start_pipe_services_between_cities(params) do
+    obtener_ciudades()
+    |> prepara_body_consulta_servicios_dia(params)
+    |> obtener_servicios_del_dia
+  end
   @doc """
   Obtiene ciudades desde la API pública de Pullman y las devuelve
   en un arreglo, en caso de error devuelve nil, o arroja excepción si es error

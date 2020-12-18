@@ -9,5 +9,6 @@ defmodule PullmanDashboardWeb.Router do
     pipe_through :api
 
     get "/kpi", KpiController, :index
+    get "/services", ServiceController, :index
   end
 end
