@@ -16,7 +16,7 @@ config :pullman_dashboard, PullmanDashboard.Repo,
 # watchers to your application. For example, we use it
 # with webpack to recompile .js and .css sources.
 config :pullman_dashboard, PullmanDashboardWeb.Endpoint,
-  http: [port: 4000],
+  http: [port: 80],
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
