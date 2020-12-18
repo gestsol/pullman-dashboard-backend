@@ -17,6 +17,12 @@ config :pullman_dashboard, PullmanDashboard.Repo,
 # with webpack to recompile .js and .css sources.
 config :pullman_dashboard, PullmanDashboardWeb.Endpoint,
   http: [port: 80],
+  https: [
+    port: 443,
+    cipher_suite: :strong,
+    keyfile: "priv/cert/selfsigned_key.pem",
+    certfile: "priv/cert/selfsigned.pem"
+  ],
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
