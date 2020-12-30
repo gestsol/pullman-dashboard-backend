@@ -11,5 +11,6 @@ defmodule PullmanDashboardWeb.Router do
     get "/kpi", KpiController, :index
     get "/services", ServiceController, :index
     get "/origenes", OriginController, :index
+    get "destinos", DestinationController, :index
   end
 end

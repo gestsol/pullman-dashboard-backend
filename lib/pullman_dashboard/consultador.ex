@@ -10,6 +10,13 @@ defmodule PullmanDashboard.Consultador do
   end
 
   @doc """
+  Wrapper sobre Tesla HTTP Client
+  """
+  def post_plain(url, body \\ nil) do
+    Tesla.post(url, body, headers: [{"content-type", "application/x-www-form-urlencoded"}])
+  end
+
+  @doc """
   Comienza la ejecución en pipe para calcular indicadores tasa de ocupación
   """
   def start_pipe(params) do
@@ -369,5 +376,28 @@ defmodule PullmanDashboard.Consultador do
       is_integer(parser_string_to_int(Map.get(i, "asiento"))) && Map.get(i, "estado") == "ocupado"
     end)
     |> Enum.count()
+  end
+
+  @doc """
+  Listado de destinos validos para servicios dado un origen (codigo ciudad origen).
+  """
+  def obtener_origenes_segun_destino(_cod_ciudad) do
+    consulta = post_plain("https://pullman.cl/integrador-web/rest/private/venta/buscarCiudadPorCodigo", "06201199")
+
+    case consulta do
+      {:error, _} ->
+        nil
+        Logger.error("Ocurrió error al obtener ciudades")
+
+      {:ok, response} ->
+        case response.status do
+          200 ->
+            Jason.decode!(response.body)
+
+          _ ->
+            Logger.error("Ocurrió error al obtener ciudades")
+            nil
+        end
+    end
   end
 end
