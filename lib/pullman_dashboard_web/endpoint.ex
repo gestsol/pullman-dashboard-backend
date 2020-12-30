@@ -56,7 +56,9 @@ defmodule PullmanDashboardWeb.Endpoint do
     origin:
     [
      "https://dev-dashboard-pullman.netlify.app",
-     "https://pullman-dashboard.gestsol.io"
+     "https://pullman-dashboard.gestsol.io",
+      "https://dev-dashboard-pullman-2.netlify.app/",
+      "https://dev-dashboard-pullman-2.netlify.app/cruds"
     ]
   )
   plug PullmanDashboardWeb.Router
