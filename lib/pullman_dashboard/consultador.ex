@@ -20,19 +20,26 @@ defmodule PullmanDashboard.Consultador do
   Comienza la ejecución en pipe para calcular indicadores tasa de ocupación
   """
   def start_pipe(params) do
-    obtener_ciudades()
-    |> prepara_body_consulta_servicios_dia(params)
-    |> obtener_servicios_del_dia
-    |> obtener_datos_servicio_segun_hora(params)
-    |> prepara_body_grilla_servicio
-    |> obtener_grilla_servicio
-    |> calcular_tasa_ocupacion
+    body_servicios_dia = prepara_body_consulta_servicios_dia(params)
+    servicios_dia = obtener_servicios_del_dia(body_servicios_dia)
+
+    Enum.map(servicios_dia, fn x -> 
+      body_grilla = prepara_body_grilla_servicio(x)
+      grilla = obtener_grilla_servicio(body_grilla)
+      calculo_ocupacion = calcular_tasa_ocupacion(grilla)
+      nuevo_mapa = Map.merge(x, calculo_ocupacion)
+    end) |> Enum.map(fn y -> Map.delete(y, "logo") end)
+    #|> obtener_servicios_del_dia
+    #|> obtener_datos_servicio_segun_hora(params)
+    #|> prepara_body_grilla_servicio
+    #|> obtener_grilla_servicio
+    #|> calcular_tasa_ocupacion
   end
 
   def start_pipe_services_between_cities(params) do
-    obtener_ciudades()
-    |> prepara_body_consulta_servicios_dia(params)
-    |> obtener_servicios_del_dia
+    #obtener_ciudades()
+    #|> prepara_body_consulta_servicios_dia(params)
+    #|> obtener_servicios_del_dia
   end
   @doc """
   Obtiene ciudades desde la API pública de Pullman y las devuelve
@@ -74,23 +81,14 @@ defmodule PullmanDashboard.Consultador do
         "idSistema" => 7
       }
   """
-  def prepara_body_consulta_servicios_dia(ciudades, params) do
-    if !is_nil(ciudades) && !is_nil(params) do
-      origen = Map.get(params, "origen", nil)
-      destino = Map.get(params, "destino", nil)
-
+  def prepara_body_consulta_servicios_dia(params) do
       %{
-        "origen" => obtener_codigo_ciudad(ciudades, origen) || nil,
-        "destino" => obtener_codigo_ciudad(ciudades, destino) || nil,
+        "origen" => Map.get(params, "origen"),
+        "destino" => Map.get(params, "destino"),
         "fecha" => Map.get(params, "fecha"),
         "hora" => "0000",
         "idSistema" => 7
       }
-
-      # Logger.write "Cuerpo armado #{inspect(body)}"
-    else
-      nil
-    end
   end
 
   @doc """
@@ -158,7 +156,7 @@ defmodule PullmanDashboard.Consultador do
       "08:30"
   """
   def transformar_hora(hora) do
-    String.codepoints(hora)
+    String.codepoints("2240")
     |> List.insert_at(2, ":")
     |> List.to_string()
   end
@@ -190,7 +188,7 @@ defmodule PullmanDashboard.Consultador do
   """
   def obtener_grilla_servicio(params) do
     {cuerpo, servicio} = params
-
+  
     if !is_nil(cuerpo) do
       peticion_http =
         post(
@@ -207,7 +205,7 @@ defmodule PullmanDashboard.Consultador do
           case response.status do
             200 ->
               {Jason.decode!(response.body), Map.get(servicio, "servicioPrimerPiso"),
-               Map.get(servicio, "servicioSegundoPiso")}
+               Map.get(servicio, "servicioSegundoPiso"), servicio}
 
             _ ->
               Logger.error("Ocurrió error al obtener grilla de servicio!")
@@ -235,30 +233,35 @@ defmodule PullmanDashboard.Consultador do
       %{
         "tasa_ocupacion_cama" => 21.43,
         "tasa_ocupacion_semicama" => 78.57,
-        "tasa_ocupacion_total" => nil,
-        "total_asientos" => 56
+        "asientos_cama_ocupados" => 10,
+        "asientos_semicama_ocupados" => 1,
+        "total_venta" => 123
       }
   """
   def calcular_tasa_ocupacion(params) do
-    {grilla, tipo_primer, tipo_segundo} = params
-
-    total =
-      if tipo_primer == tipo_segundo do
-        calcula_total_asientos_ocupados_por_piso(grilla, "1") +
-          calcula_total_asientos_ocupados_por_piso(grilla, "2")
-      else
-        nil
-      end
+    {grilla, tipo_primer, tipo_segundo, servicio} = params
 
     total_asientos = calcula_total_asientos_bus(grilla)
+    kilometraje = obtener_kilometraje_servicio(servicio)
+
+    valor_primer_piso = Map.get(servicio, "tarifaPrimerPiso") |> String.replace(".", "") |> parser_string_to_int
+    ocupados_primer_piso = calcula_total_asientos_ocupados_por_piso(grilla, "1")
+
+    valor_segundo_piso = Map.get(servicio, "tarifaSegundoPiso", 0) |> String.replace(".", "") |> parser_string_to_int
+    ocupados_segundo_piso = calcula_total_asientos_ocupados_por_piso(grilla, "2")
+    
+    total_venta = (valor_primer_piso*ocupados_primer_piso) + (valor_segundo_piso*ocupados_segundo_piso)
+    valor_km = total_venta / kilometraje
+
 
     %{
-      "total_asientos" => total_asientos,
-      "tasa_ocupacion_cama" =>
-        if(is_nil(total), do: calcula_ocupacion_cama(params, total_asientos), else: nil),
-      "tasa_ocupacion_semicama" =>
-        if(is_nil(total), do: calcula_ocupacion_semi(params, total_asientos), else: nil),
-      "tasa_ocupacion_total" => total
+      "tasa_ocupacion_cama" => calcula_ocupacion_cama(params, total_asientos),
+      "tasa_ocupacion_semicama" => calcula_ocupacion_semi(params, total_asientos),
+      "asientos_cama_ocupados" => calcula_asientos_cama_ocupados(params, total_asientos),
+      "asientos_semicama_ocupados" => calcula_asientos_semicama_ocupados(params, total_asientos),
+      "total_venta" => total_venta,
+      "valor_km" => valor_km,
+      "kilometraje" => kilometraje
     }
   end
 
@@ -274,15 +277,12 @@ defmodule PullmanDashboard.Consultador do
       21.43
   """
   def calcula_ocupacion_cama(params, total) do
-    {grilla, tipo_primer, _tipo_segundo} = params
+    {grilla, tipo_primer, tipo_segundo, _servicio} = params
+    primer_piso = if tipo_primer == "SALON CAMA", do: calcula_total_asientos_ocupados_por_piso(grilla, "1"), else: 0
+    segundo_piso = if tipo_segundo == "SALON CAMA" , do: calcula_total_asientos_ocupados_por_piso(grilla, "2") , else: 0
 
-    total_ocupados =
-      if tipo_primer == "SALON CAMA" do
-        calcula_total_asientos_ocupados_por_piso(grilla, "1")
-      else
-        calcula_total_asientos_ocupados_por_piso(grilla, "2")
-      end
-
+    total_ocupados = primer_piso + segundo_piso
+      
     (total_ocupados / total * 100)
     |> Float.round(2)
   end
@@ -299,17 +299,101 @@ defmodule PullmanDashboard.Consultador do
       21.43
   """
   def calcula_ocupacion_semi(params, total) do
-    {grilla, tipo_primer, _tipo_segundo} = params
+    {grilla, tipo_primer, tipo_segundo, _servicio} = params
+    primer_piso = if tipo_primer == "SEMI CAMA", do: calcula_total_asientos_ocupados_por_piso(grilla, "1"), else: 0
+    segundo_piso = if tipo_segundo == "SEMI CAMA", do: calcula_total_asientos_ocupados_por_piso(grilla, "2") , else: 0
 
-    total_ocupados =
-      if tipo_primer == "SEMI CAMA" do
-        calcula_total_asientos_ocupados_por_piso(grilla, "1")
-      else
-        calcula_total_asientos_ocupados_por_piso(grilla, "2")
-      end
+    total_ocupados = primer_piso + segundo_piso
 
     (total_ocupados / total * 100)
     |> Float.round(2)
+  end
+
+  @doc """
+  Función auxiliar que calcula numero de asientos CAMA ocupados a partir de 
+  grilla vertical recibida. 
+
+  Existe ejemplo del mapa en el archivo
+  lib/pullman_dashboard/ejemplos/grilla_vertical.ex
+
+  ## Ejemplo
+      iex>calcula_asientos_cama_ocupados(grilla, total)
+      10
+  """
+  def calcula_asientos_cama_ocupados(params, total) do
+    {grilla, tipo_primer, tipo_segundo, _servicio} = params
+    primer_piso = if tipo_primer == "SALON CAMA", do: calcula_total_asientos_ocupados_por_piso(grilla, "1"), else: 0
+    segundo_piso = if tipo_segundo == "SALON CAMA" , do: calcula_total_asientos_ocupados_por_piso(grilla, "2") , else: 0
+
+    total_ocupados = primer_piso + segundo_piso
+  end
+
+  @doc """
+  Función auxiliar que calcula numero de asientos SEMICAMA ocupados a partir de 
+  grilla vertical recibida. 
+
+  Existe ejemplo del mapa en el archivo
+  lib/pullman_dashboard/ejemplos/grilla_vertical.ex
+
+  ## Ejemplo
+      iex>calcula_asientos_semicama_ocupados(grilla, total)
+      5
+  """
+  def calcula_asientos_semicama_ocupados(params, total) do
+    {grilla, tipo_primer, tipo_segundo, _servicio} = params
+    primer_piso = if tipo_primer == "SEMI CAMA", do: calcula_total_asientos_ocupados_por_piso(grilla, "1"), else: 0
+    segundo_piso = if tipo_segundo == "SEMI CAMA", do: calcula_total_asientos_ocupados_por_piso(grilla, "2") , else: 0
+
+    total_ocupados = primer_piso + segundo_piso
+  end
+
+  @doc """
+  Calcula el kilometraje para un servicio
+
+  ## Ej
+      iex>obtener_kilometraje_servicio(..)
+      1200
+  """
+  def obtener_kilometraje_servicio(servicio) do
+    servicios_mes = obtener_servicios_entre_ciudades(servicio)
+    mapa = servicios_mes |> hd
+    km_total = Map.get(mapa, "kilometraje", 0) |> parser_string_to_int
+    cantidad_servicios = Map.get(mapa, "cantidadServicio", 0) |> parser_string_to_int
+    km = km_total / cantidad_servicios
+  end
+
+  @doc """
+  Obtiene listado de servicios para un mes entre ciudades, este listado se usa para obtener
+  kilometraje de un servicio dado y realizar el calculo de valor por KM.
+  """
+  def obtener_servicios_entre_ciudades(servicio) do
+    hoy = Date.utc_today
+    year = hoy.year
+    month = hoy.month
+
+    body = %{
+      "origen" => "MA", #Map.get(servicio, "idTerminalOrigen"),
+      "destino" => "TE",#Map.get(servicio, "idTerminalDestino"),
+      "annio" => "#{year}",
+      "mes" => "#{month}"}
+
+    peticion_http = post("https://pullmandashboard.witservices.io/srv-dashboard-web/rest/indicador/buscarHorarioTramoMes", body)
+
+    case peticion_http do
+      {:error, _} ->
+        nil
+        Logger.error("Ocurrió error al obtener kilometraje de servicio!")
+
+      {:ok, response} ->
+        case response.status do
+          200 ->
+            Jason.decode!(response.body)
+
+          _ ->
+            Logger.error("Ocurrió error al obtener kilometraje de servicio!")
+            nil
+        end
+    end
   end
 
   @doc """
@@ -342,6 +426,25 @@ defmodule PullmanDashboard.Consultador do
     case Integer.parse(str) do
       {int, _rest} ->
         int
+
+      :error ->
+        :no
+    end
+  end
+
+  @doc """
+  Función auxiliar que devuelve un float convertido desde un string mediante 
+  Integer.parse, 
+  o un atom :no. 
+
+  ## Ejemplo
+      iex>parser_string_to_float("1.44")
+      1.44
+  """
+  def parser_string_to_float(str) do
+    case Integer.parse(str) do
+      {float, _rest} ->
+        float
 
       :error ->
         :no
