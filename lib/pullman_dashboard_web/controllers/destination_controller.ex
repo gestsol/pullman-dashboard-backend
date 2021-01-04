@@ -3,7 +3,7 @@ defmodule PullmanDashboardWeb.DestinationController do
   alias PullmanDashboard.Consultador
 
   def index(conn, %{"cod_origen" => cod_origen}) do
-  	destinos = Consultador.obtener_origenes_segun_destino("cod_origen")
+  	destinos = Consultador.obtener_destinos_segun_origen(cod_origen)
 
   	conn
     |> json(destinos)

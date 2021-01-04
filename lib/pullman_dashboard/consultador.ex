@@ -484,8 +484,8 @@ defmodule PullmanDashboard.Consultador do
   @doc """
   Listado de destinos validos para servicios dado un origen (codigo ciudad origen).
   """
-  def obtener_origenes_segun_destino(_cod_ciudad) do
-    consulta = post_plain("https://pullman.cl/integrador-web/rest/private/venta/buscarCiudadPorCodigo", "06201199")
+  def obtener_destinos_segun_origen(cod_ciudad_origen) do
+    consulta = post_plain("https://pullman.cl/integrador-web/rest/private/venta/buscarCiudadPorCodigo", cod_ciudad_origen)
 
     case consulta do
       {:error, _} ->
