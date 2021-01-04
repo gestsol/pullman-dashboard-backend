@@ -268,7 +268,8 @@ defmodule PullmanDashboard.Consultador do
       "kilometraje" => kilometraje,
       "total_asientos_ocupados" => total_ocupados,
       "total_asientos" => total_asientos,
-      "total_disponibles" => total_disponibles
+      "total_disponibles" => total_disponibles,
+      "tasa_total" => tasa_total
     }
   end
 
