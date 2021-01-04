@@ -249,6 +249,9 @@ defmodule PullmanDashboard.Consultador do
     ocupados_segundo_piso = calcula_total_asientos_ocupados_por_piso(grilla, "2")
 
     total_ocupados = ocupados_primer_piso + ocupados_segundo_piso
+    disponibles_primer_piso = calcula_total_asientos_disponibles_por_piso(grilla, "1")
+    disponibles_segundo_piso = calcula_total_asientos_disponibles_por_piso(grilla, "2")
+    total_disponibles = disponibles_primer_piso + disponibles_segundo_piso
     total_venta = (valor_primer_piso*ocupados_primer_piso) + (valor_segundo_piso*ocupados_segundo_piso)
 
     valor_km = total_venta / kilometraje
@@ -263,7 +266,8 @@ defmodule PullmanDashboard.Consultador do
       "valor_km" => valor_km,
       "kilometraje" => kilometraje,
       "total_asientos_ocupados" => total_ocupados,
-      "total_asientos" => total_asientos
+      "total_asientos" => total_asientos,
+      "total_disponibles" => total_disponibles
     }
   end
 
@@ -514,6 +518,30 @@ defmodule PullmanDashboard.Consultador do
       |> List.flatten()
       |> Enum.filter(fn i ->
         is_integer(parser_string_to_int(Map.get(i, "asiento"))) && Map.get(i, "estado") == "ocupado"
+      end)
+      |> Enum.count()  
+    else
+      0
+    end  
+  end
+
+  @doc """
+  Función auxiliar que calcula el total de asientos por piso, creada para evitar duplicidad <3!
+
+  ## Ejemplo
+      iex> calcula_total_asientos_ocupados_por_piso(%{..}, "1")
+      10
+      
+      * En caso de que el piso no exista (buses de un solo piso).
+      iex> calcula_total_asientos_ocupados_por_piso(%{..}, "1")
+      0
+  """
+  def calcula_total_asientos_disponibles_por_piso(grilla, piso \\ 1) do
+    if is_list(Map.get(grilla, piso)) do
+      Map.get(grilla, piso)
+      |> List.flatten()
+      |> Enum.filter(fn i ->
+        is_integer(parser_string_to_int(Map.get(i, "asiento"))) && Map.get(i, "estado") != "ocupado"
       end)
       |> Enum.count()  
     else
