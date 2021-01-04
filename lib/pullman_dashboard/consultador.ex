@@ -17,6 +17,31 @@ defmodule PullmanDashboard.Consultador do
   end
 
   @doc """
+  Obtiene ciudades desde la API pública de Pullman y las devuelve
+  en un arreglo, en caso de error devuelve nil, o arroja excepción si es error
+  de decoding.
+  """
+  def obtener_ciudades() do
+    peticion = post("https://pullman.cl/integrador-web/rest/private/venta/buscaCiudades")
+
+    case peticion do
+      {:error, _} ->
+        nil
+        Logger.error("Ocurrió error al obtener ciudades")
+
+      {:ok, response} ->
+        case response.status do
+          200 ->
+            Jason.decode!(response.body)
+
+          _ ->
+            Logger.error("Ocurrió error al obtener ciudades")
+            nil
+        end
+    end
+  end
+
+  @doc """
   Comienza la ejecución en pipe para calcular indicadores tasa de ocupación
   """
   def start_pipe(params) do
