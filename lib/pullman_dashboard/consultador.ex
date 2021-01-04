@@ -247,19 +247,23 @@ defmodule PullmanDashboard.Consultador do
 
     valor_segundo_piso = Map.get(servicio, "tarifaSegundoPiso", "0") |> String.replace(".", "") |> parser_string_to_int
     ocupados_segundo_piso = calcula_total_asientos_ocupados_por_piso(grilla, "2")
-    
-    total_venta = (valor_primer_piso*ocupados_primer_piso) + (valor_segundo_piso*ocupados_segundo_piso)
-    valor_km = total_venta / kilometraje
 
+    total_ocupados = ocupados_primer_piso + ocupados_segundo_piso
+    total_venta = (valor_primer_piso*ocupados_primer_piso) + (valor_segundo_piso*ocupados_segundo_piso)
+
+    valor_km = total_venta / kilometraje
 
     %{
       "tasa_ocupacion_cama" => calcula_ocupacion_cama(params, total_asientos),
       "tasa_ocupacion_semicama" => calcula_ocupacion_semi(params, total_asientos),
+      "tasa_ocupacion_ejecutivo" => calcula_ocupacion_ejecutivo(params, total_asientos),
       "asientos_cama_ocupados" => calcula_asientos_cama_ocupados(params, total_asientos),
       "asientos_semicama_ocupados" => calcula_asientos_semicama_ocupados(params, total_asientos),
       "total_venta" => total_venta,
       "valor_km" => valor_km,
-      "kilometraje" => kilometraje
+      "kilometraje" => kilometraje,
+      "total_asientos_ocupados" => total_ocupados,
+      "total_asientos" => total_asientos
     }
   end
 
@@ -300,6 +304,28 @@ defmodule PullmanDashboard.Consultador do
     {grilla, tipo_primer, tipo_segundo, _servicio} = params
     primer_piso = if tipo_primer == "SEMI CAMA", do: calcula_total_asientos_ocupados_por_piso(grilla, "1"), else: 0
     segundo_piso = if tipo_segundo == "SEMI CAMA", do: calcula_total_asientos_ocupados_por_piso(grilla, "2") , else: 0
+
+    total_ocupados = primer_piso + segundo_piso
+
+    (total_ocupados / total * 100)
+    |> Float.round(2)
+  end
+
+  @doc """
+  Función auxiliar que calcula porcentaje de asientos EJECUTIVO ocupados a partir de 
+  grilla vertical recibida. 
+
+  Existe ejemplo del mapa en el archivo
+  lib/pullman_dashboard/ejemplos/grilla_vertical.ex
+
+  ## Ejemplo
+      iex>calcula_ocupacion_ejecutivo(grilla, total)
+      10.4
+  """
+  def calcula_ocupacion_ejecutivo(params, total) do
+    {grilla, tipo_primer, tipo_segundo, _servicio} = params
+    primer_piso = if tipo_primer == "EJECUTIVO", do: calcula_total_asientos_ocupados_por_piso(grilla, "1"), else: 0
+    segundo_piso = if tipo_segundo == "EJECUTIVO", do: calcula_total_asientos_ocupados_por_piso(grilla, "2") , else: 0
 
     total_ocupados = primer_piso + segundo_piso
 
