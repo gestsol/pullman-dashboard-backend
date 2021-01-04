@@ -26,44 +26,14 @@ defmodule PullmanDashboard.Consultador do
     Enum.map(servicios_dia, fn x -> 
       body_grilla = prepara_body_grilla_servicio(x)
       grilla = obtener_grilla_servicio(body_grilla)
-      calculo_ocupacion = calcular_tasa_ocupacion(grilla)
+      calculo_ocupacion = calcular_indicadores(grilla)
       nuevo_mapa = Map.merge(x, calculo_ocupacion)
     end) |> Enum.map(fn y -> Map.delete(y, "logo") end)
     #|> obtener_servicios_del_dia
     #|> obtener_datos_servicio_segun_hora(params)
     #|> prepara_body_grilla_servicio
     #|> obtener_grilla_servicio
-    #|> calcular_tasa_ocupacion
-  end
-
-  def start_pipe_services_between_cities(params) do
-    #obtener_ciudades()
-    #|> prepara_body_consulta_servicios_dia(params)
-    #|> obtener_servicios_del_dia
-  end
-  @doc """
-  Obtiene ciudades desde la API pública de Pullman y las devuelve
-  en un arreglo, en caso de error devuelve nil, o arroja excepción si es error
-  de decoding.
-  """
-  def obtener_ciudades() do
-    peticion = post("https://pullman.cl/integrador-web/rest/private/venta/buscaCiudades")
-
-    case peticion do
-      {:error, _} ->
-        nil
-        Logger.error("Ocurrió error al obtener ciudades")
-
-      {:ok, response} ->
-        case response.status do
-          200 ->
-            Jason.decode!(response.body)
-
-          _ ->
-            Logger.error("Ocurrió error al obtener ciudades")
-            nil
-        end
-    end
+    #|> calcular_indicadores
   end
 
   @doc """
@@ -229,16 +199,19 @@ defmodule PullmanDashboard.Consultador do
   lib/pullman_dashboard/ejemplos/grilla_vertical.ex
 
   ## Ejemplo
-      iex>calcular_tasa_ocupacion({.., .., ..})
+      iex>calcular_indicadores({.., .., ..})
       %{
         "tasa_ocupacion_cama" => 21.43,
         "tasa_ocupacion_semicama" => 78.57,
         "asientos_cama_ocupados" => 10,
         "asientos_semicama_ocupados" => 1,
-        "total_venta" => 123
+        "total_venta" => 123,
+        "valor_km" => 123,
+        "kilometraje" => 123
+
       }
   """
-  def calcular_tasa_ocupacion(params) do
+  def calcular_indicadores(params) do
     {grilla, tipo_primer, tipo_segundo, servicio} = params
 
     total_asientos = calcula_total_asientos_bus(grilla)
@@ -247,7 +220,7 @@ defmodule PullmanDashboard.Consultador do
     valor_primer_piso = Map.get(servicio, "tarifaPrimerPiso") |> String.replace(".", "") |> parser_string_to_int
     ocupados_primer_piso = calcula_total_asientos_ocupados_por_piso(grilla, "1")
 
-    valor_segundo_piso = Map.get(servicio, "tarifaSegundoPiso", 0) |> String.replace(".", "") |> parser_string_to_int
+    valor_segundo_piso = Map.get(servicio, "tarifaSegundoPiso", "0") |> String.replace(".", "") |> parser_string_to_int
     ocupados_segundo_piso = calcula_total_asientos_ocupados_por_piso(grilla, "2")
     
     total_venta = (valor_primer_piso*ocupados_primer_piso) + (valor_segundo_piso*ocupados_segundo_piso)
@@ -457,12 +430,20 @@ defmodule PullmanDashboard.Consultador do
   ## Ejemplo
       iex> calcula_total_asientos_por_piso(%{..}, "1")
       12
+
+      * En caso de que el piso no exista (buses de un solo piso).
+      iex> calcula_total_asientos_por_piso(%{..}, "3")
+      0
   """
   def calcula_total_asientos_por_piso(grilla, piso \\ 1) do
-    Map.get(grilla, piso)
-    |> List.flatten()
-    |> Enum.filter(fn i -> is_integer(parser_string_to_int(Map.get(i, "asiento"))) end)
-    |> Enum.count()
+    if is_list(Map.get(grilla, piso)) do
+      Map.get(grilla, piso)
+      |> List.flatten()
+      |> Enum.filter(fn i -> is_integer(parser_string_to_int(Map.get(i, "asiento"))) end)
+      |> Enum.count()  
+    else
+      0
+    end
   end
 
   @doc """
@@ -471,14 +452,22 @@ defmodule PullmanDashboard.Consultador do
   ## Ejemplo
       iex> calcula_total_asientos_ocupados_por_piso(%{..}, "1")
       10
+      
+      * En caso de que el piso no exista (buses de un solo piso).
+      iex> calcula_total_asientos_ocupados_por_piso(%{..}, "1")
+      0
   """
   def calcula_total_asientos_ocupados_por_piso(grilla, piso \\ 1) do
-    Map.get(grilla, piso)
-    |> List.flatten()
-    |> Enum.filter(fn i ->
-      is_integer(parser_string_to_int(Map.get(i, "asiento"))) && Map.get(i, "estado") == "ocupado"
-    end)
-    |> Enum.count()
+    if is_list(Map.get(grilla, piso)) do
+      Map.get(grilla, piso)
+      |> List.flatten()
+      |> Enum.filter(fn i ->
+        is_integer(parser_string_to_int(Map.get(i, "asiento"))) && Map.get(i, "estado") == "ocupado"
+      end)
+      |> Enum.count()  
+    else
+      0
+    end  
   end
 
   @doc """
