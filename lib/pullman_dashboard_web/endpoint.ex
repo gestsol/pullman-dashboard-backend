@@ -50,6 +50,6 @@ defmodule PullmanDashboardWeb.Endpoint do
   plug Plug.MethodOverride
   plug Plug.Head
   plug Plug.Session, @session_options
-  plug CORSPlug, origin: ["https://dev-dashboard-pullman.netlify.app", "https://pullman-dashboard.gestsol.io", "https://dev-dashboard-pullman-2.netlify.app/", "http://dev-dashboard-pullman-2.netlify.app/", "https://dev-dashboard-pullman-2.netlify.app/cruds", "http://dev-dashboard-pullman-2.netlify.app/cruds"]
+  plug CORSPlug, origin: ["https://dev-dashboard-pullman.netlify.app", "https://pullman-dashboard.gestsol.io", "https://dev-dashboard-pullman-2.netlify.app", "http://dev-dashboard-pullman-2.netlify.app", "https://dev-dashboard-pullman-2.netlify.app/cruds", "http://dev-dashboard-pullman-2.netlify.app/cruds"]
   plug PullmanDashboardWeb.Router
 end
