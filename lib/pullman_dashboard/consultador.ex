@@ -260,6 +260,9 @@ defmodule PullmanDashboard.Consultador do
       "tasa_ocupacion_cama" => calcula_ocupacion_cama(params, total_asientos),
       "tasa_ocupacion_semicama" => calcula_ocupacion_semi(params, total_asientos),
       "tasa_ocupacion_ejecutivo" => calcula_ocupacion_ejecutivo(params, total_asientos),
+      "total_asientos_cama" => calcula_total_asientos_cama(params),
+      "total_asientos_semicama" => calcula_total_asientos_semicama(params),
+      "total_asientos_ejecutivo" => calcula_total_asientos_ejecutivo(params),
       "total_asientos_cama_ocupados" => calcula_asientos_cama_ocupados(params, total_asientos),
       "total_asientos_semicama_ocupados" => calcula_asientos_semicama_ocupados(params, total_asientos),
       "total_asientos_ejecutivo_ocupados" => calcula_asientos_ejecutivos_ocupados(params, total_asientos),
@@ -395,6 +398,40 @@ defmodule PullmanDashboard.Consultador do
 
     total_ocupados = primer_piso + segundo_piso
   end
+
+ @doc """
+ Función auxiliar que calcula el total de asientos cama que posee el servicio
+ """
+ def calcula_total_asientos_cama(params) do
+ 	{grilla, tipo_primer, tipo_segundo, _servicio} = params
+ 	primer_piso = if tipo_primer == "SALON CAMA", do: calcula_total_asientos_por_piso(grilla, "1"), else: 0
+ 	segundo_piso = if tipo_segundo == "SALON CAMA", do: calcula_total_asientos_por_piso(grilla, "2") , else: 0
+
+ 	total = primer_piso + segundo_piso
+ end
+
+ @doc """
+ Función auxiliar que calcula el total de asientos cama que posee el servicio
+ """
+ def calcula_total_asientos_semicama(params) do
+ 	{grilla, tipo_primer, tipo_segundo, _servicio} = params
+ 	primer_piso = if tipo_primer == "SEMI CAMA", do: calcula_total_asientos_por_piso(grilla, "1"), else: 0
+ 	segundo_piso = if tipo_segundo == "SEMI CAMA", do: calcula_total_asientos_por_piso(grilla, "2") , else: 0
+
+ 	total = primer_piso + segundo_piso
+ end
+
+ @doc """
+ Función auxiliar que calcula el total de asientos EJECUTIVOS cama que posee el servicio
+ """
+ def calcula_total_asientos_ejecutivo(params) do
+ 	{grilla, tipo_primer, tipo_segundo, _servicio} = params
+ 	primer_piso = if tipo_primer == "EJECUTIVO", do: calcula_total_asientos_por_piso(grilla, "1"), else: 0
+ 	segundo_piso = if tipo_segundo == "EJECUTIVO", do: calcula_total_asientos_por_piso(grilla, "2") , else: 0
+
+ 	total = primer_piso + segundo_piso
+ end
+
 
   @doc """
   Calcula el kilometraje para un servicio
