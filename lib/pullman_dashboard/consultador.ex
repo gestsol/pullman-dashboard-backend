@@ -42,23 +42,26 @@ defmodule PullmanDashboard.Consultador do
   end
 
   @doc """
-  Comienza la ejecución en pipe para calcular indicadores tasa de ocupación
+  Comienza la ejecución en pipe para calcular indicadores de servicios
   """
   def start_pipe(params) do
+    max_concurrency = System.schedulers_online() * 2
     body_servicios_dia = prepara_body_consulta_servicios_dia(params)
     servicios_dia = obtener_servicios_del_dia(body_servicios_dia)
-
-    Enum.map(servicios_dia, fn x -> 
-      body_grilla = prepara_body_grilla_servicio(x)
-      grilla = obtener_grilla_servicio(body_grilla)
-      calculo_ocupacion = calcular_indicadores(grilla)
-      nuevo_mapa = Map.merge(x, calculo_ocupacion)
-    end) |> Enum.map(fn y -> Map.delete(y, "logo") end)
-    #|> obtener_servicios_del_dia
-    #|> obtener_datos_servicio_segun_hora(params)
-    #|> prepara_body_grilla_servicio
-    #|> obtener_grilla_servicio
-    #|> calcular_indicadores
+    stream =
+      Task.async_stream(
+        servicios_dia,
+        fn x ->
+          body_grilla = prepara_body_grilla_servicio(x)
+          grilla = obtener_grilla_servicio(body_grilla)
+          calculo_ocupacion = calcular_indicadores(grilla)
+          nuevo_mapa = Map.merge(x, calculo_ocupacion)
+        end,
+        max_concurrency: max_concurrency
+      )
+      |> Enum.to_list()
+      |> Keyword.values()
+      |> Enum.map(fn y -> Map.delete(y, "logo") end)
   end
 
   @doc """
