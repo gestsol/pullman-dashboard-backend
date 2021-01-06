@@ -194,7 +194,7 @@ defmodule PullmanDashboard.Consultador do
       case peticion_http do
         {:error, _} ->
           nil
-          Logger.error("Ocurrió error al obtener grilla de servicio! ")
+          Logger.error("Ocurrió error al obtener grilla de servicio!, error en la consulta")
 
         {:ok, response} ->
           case response.status do
@@ -203,7 +203,7 @@ defmodule PullmanDashboard.Consultador do
                Map.get(servicio, "servicioSegundoPiso"), servicio}
 
             _ ->
-              Logger.error("Ocurrió error al obtener grilla de servicio!")
+              Logger.error("Ocurrió error al obtener grilla de servicio!, no devolvio nada")
               nil
           end
       end
@@ -260,12 +260,15 @@ defmodule PullmanDashboard.Consultador do
       "tasa_ocupacion_cama" => calcula_ocupacion_cama(params, total_asientos),
       "tasa_ocupacion_semicama" => calcula_ocupacion_semi(params, total_asientos),
       "tasa_ocupacion_ejecutivo" => calcula_ocupacion_ejecutivo(params, total_asientos),
+      "tasa_ocupacion_supersalon" => calcula_ocupacion_supersalon(params, total_asientos),
       "total_asientos_cama" => calcula_total_asientos_cama(params),
       "total_asientos_semicama" => calcula_total_asientos_semicama(params),
       "total_asientos_ejecutivo" => calcula_total_asientos_ejecutivo(params),
+      "total_asientos_supersalon" => calcula_total_asientos_supersalon(params),
       "total_asientos_cama_ocupados" => calcula_asientos_cama_ocupados(params, total_asientos),
       "total_asientos_semicama_ocupados" => calcula_asientos_semicama_ocupados(params, total_asientos),
       "total_asientos_ejecutivo_ocupados" => calcula_asientos_ejecutivos_ocupados(params, total_asientos),
+      "total_asientos_supersalon_ocupados" => calcula_asientos_supersalon_ocupados(params, total_asientos),
       "total_venta" => total_venta,
       "valor_km" => valor_km,
       "kilometraje" => kilometraje,
@@ -343,6 +346,28 @@ defmodule PullmanDashboard.Consultador do
   end
 
   @doc """
+  Función auxiliar que calcula porcentaje de asientos SUPER SALON ocupados a partir de 
+  grilla vertical recibida. 
+
+  Existe ejemplo del mapa en el archivo
+  lib/pullman_dashboard/ejemplos/grilla_vertical.ex
+
+  ## Ejemplo
+      iex>calcula_ocupacion_ejecutivo(grilla, total)
+      10.4
+  """
+  def calcula_ocupacion_supersalon(params, total) do
+    {grilla, tipo_primer, tipo_segundo, _servicio} = params
+    primer_piso = if tipo_primer == "SUPER SALON", do: calcula_total_asientos_ocupados_por_piso(grilla, "1"), else: 0
+    segundo_piso = if tipo_segundo == "SUPER SALON", do: calcula_total_asientos_ocupados_por_piso(grilla, "2") , else: 0
+
+    total_ocupados = primer_piso + segundo_piso
+
+    (total_ocupados / total * 100)
+    |> Float.round(2)
+  end
+
+  @doc """
   Función auxiliar que calcula numero de asientos CAMA ocupados a partir de 
   grilla vertical recibida. 
 
@@ -388,13 +413,32 @@ defmodule PullmanDashboard.Consultador do
   lib/pullman_dashboard/ejemplos/grilla_vertical.ex
 
   ## Ejemplo
-      iex>calcula_asientos_semicama_ocupados(grilla, total)
+      iex>calcula_asientos_ejecutivos_ocupados(grilla, total)
       5
   """
   def calcula_asientos_ejecutivos_ocupados(params, total) do
     {grilla, tipo_primer, tipo_segundo, _servicio} = params
     primer_piso = if tipo_primer == "EJECUTIVO", do: calcula_total_asientos_ocupados_por_piso(grilla, "1"), else: 0
     segundo_piso = if tipo_segundo == "EJECUTIVO", do: calcula_total_asientos_ocupados_por_piso(grilla, "2") , else: 0
+
+    total_ocupados = primer_piso + segundo_piso
+  end
+
+  @doc """
+  Función auxiliar que calcula numero de asientos SUPER SALON ocupados a partir de 
+  grilla vertical recibida. 
+
+  Existe ejemplo del mapa en el archivo
+  lib/pullman_dashboard/ejemplos/grilla_vertical.ex
+
+  ## Ejemplo
+      iex>calcula_asientos_supersalon_ocupados(grilla, total)
+      5
+  """
+  def calcula_asientos_supersalon_ocupados(params, total) do
+    {grilla, tipo_primer, tipo_segundo, _servicio} = params
+    primer_piso = if tipo_primer == "SUPER SALON", do: calcula_total_asientos_ocupados_por_piso(grilla, "1"), else: 0
+    segundo_piso = if tipo_segundo == "SUPER SALON", do: calcula_total_asientos_ocupados_por_piso(grilla, "2") , else: 0
 
     total_ocupados = primer_piso + segundo_piso
   end
@@ -422,7 +466,7 @@ defmodule PullmanDashboard.Consultador do
  end
 
  @doc """
- Función auxiliar que calcula el total de asientos EJECUTIVOS cama que posee el servicio
+ Función auxiliar que calcula el total de asientos EJECUTIVOS que posee el servicio
  """
  def calcula_total_asientos_ejecutivo(params) do
  	{grilla, tipo_primer, tipo_segundo, _servicio} = params
@@ -430,6 +474,17 @@ defmodule PullmanDashboard.Consultador do
  	segundo_piso = if tipo_segundo == "EJECUTIVO", do: calcula_total_asientos_por_piso(grilla, "2") , else: 0
 
  	total = primer_piso + segundo_piso
+ end
+
+ @doc """
+ Función auxiliar que calcula el total de asientos SUPER SALON  que posee el servicio
+ """
+ def calcula_total_asientos_supersalon(params) do
+   {grilla, tipo_primer, tipo_segundo, _servicio} = params
+   primer_piso = if tipo_primer == "SUPER SALON", do: calcula_total_asientos_por_piso(grilla, "1"), else: 0
+   segundo_piso = if tipo_segundo == "SUPER SALON", do: calcula_total_asientos_por_piso(grilla, "2") , else: 0
+
+   total = primer_piso + segundo_piso
  end
 
 
