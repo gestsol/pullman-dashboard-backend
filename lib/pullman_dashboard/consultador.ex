@@ -48,13 +48,26 @@ defmodule PullmanDashboard.Consultador do
     max_concurrency = System.schedulers_online() * 2
     body_servicios_dia = prepara_body_consulta_servicios_dia(params)
     servicios_dia = obtener_servicios_del_dia(body_servicios_dia)
+    km = 
+      Task.async_stream(
+        servicios_dia, 
+        fn y ->
+          obtener_kilometraje_servicio(y)
+        end,
+        max_concurrency: max_concurrency
+        )
+    |> Enum.to_list()
+    |> Keyword.values()
+    |> Enum.reject(fn c -> is_nil(c) end)
+    |> List.first
+
     stream =
       Task.async_stream(
         servicios_dia,
         fn x ->
           body_grilla = prepara_body_grilla_servicio(x)
           grilla = obtener_grilla_servicio(body_grilla)
-          calculo_ocupacion = calcular_indicadores(grilla)
+          calculo_ocupacion = calcular_indicadores(grilla, km)
           nuevo_mapa = Map.merge(x, calculo_ocupacion)
         end,
         max_concurrency: max_concurrency
@@ -219,15 +232,17 @@ defmodule PullmanDashboard.Consultador do
   Calcula indicadores de interes en base a grilla recibida y devuelve mapa con los valores.
   Recibe como parametro una tupla compuesta por {p1,p2,3} donde:
 
-  -p1 == grilla vertical devuelta por consulta a pullmanbus.cl que se procesa para calcular indicadores,
-  -p2 == string que especifica el tipo de servicio del primer piso ("CAMA" || "SEMICAMA"),
-  -p3 == string que especifica tipo de servicio segundo piso ("CAMA" || "SEMICAMA"),
+   -p1 == grilla vertical devuelta por consulta a pullmanbus.cl que se procesa para calcular indicadores,
+   -p2 == string que especifica el tipo de servicio del primer piso ("CAMA" || "SEMICAMA"),
+   -p3 == string que especifica tipo de servicio segundo piso ("CAMA" || "SEMICAMA"),
+
+  Además recibe el total de kilometros entre origen destino para el servicio
 
   Ejemplo de la grilla disponible en el archivo
   lib/pullman_dashboard/ejemplos/grilla_vertical.ex
 
   ## Ejemplo
-      iex>calcular_indicadores({.., .., ..})
+      iex>calcular_indicadores({.., .., ..}, km)
       %{
         "tasa_ocupacion_cama" => 21.43,
         "tasa_ocupacion_semicama" => 78.57,
@@ -239,11 +254,11 @@ defmodule PullmanDashboard.Consultador do
 
       }
   """
-  def calcular_indicadores(params) do
+  def calcular_indicadores(params, km) do
     {grilla, tipo_primer, tipo_segundo, servicio} = params
 
     total_asientos = calcula_total_asientos_bus(grilla)
-    kilometraje = obtener_kilometraje_servicio(servicio)
+    kilometraje = km
 
     valor_primer_piso = Map.get(servicio, "tarifaPrimerPiso") |> String.replace(".", "") |> parser_string_to_int
     ocupados_primer_piso = calcula_total_asientos_ocupados_por_piso(grilla, "1")
@@ -500,10 +515,14 @@ defmodule PullmanDashboard.Consultador do
   """
   def obtener_kilometraje_servicio(servicio) do
     servicios_mes = obtener_servicios_entre_ciudades(servicio)
-    mapa = servicios_mes |> hd
-    km_total = Map.get(mapa, "kilometraje", 0) |> parser_string_to_int
-    cantidad_servicios = Map.get(mapa, "cantidadServicio", 0) |> parser_string_to_int
-    km = km_total / cantidad_servicios
+    mapa = servicios_mes |> List.first
+    if is_map(mapa) do
+      km_total = Map.get(mapa, "kilometraje", "0") |> parser_string_to_int
+      cantidad_servicios = Map.get(mapa, "cantidadServicio", "0") |> parser_string_to_int
+      km = km_total / cantidad_servicios  
+    else
+      nil
+    end
   end
 
   @doc """
@@ -516,8 +535,8 @@ defmodule PullmanDashboard.Consultador do
     month = hoy.month
 
     body = %{
-      "origen" => "MA", #Map.get(servicio, "idTerminalOrigen"),
-      "destino" => "TE",#Map.get(servicio, "idTerminalDestino"),
+      "origen" => Map.get(servicio, "idTerminalOrigen"),
+      "destino" => Map.get(servicio, "idTerminalDestino"),
       "annio" => "#{year}",
       "mes" => "#{month}"}
 
