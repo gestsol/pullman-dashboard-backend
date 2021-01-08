@@ -272,29 +272,159 @@ defmodule PullmanDashboard.Consultador do
     total_disponibles = disponibles_primer_piso + disponibles_segundo_piso
     total_venta = (valor_primer_piso*ocupados_primer_piso) + (valor_segundo_piso*ocupados_segundo_piso)
     tasa_total = ((total_ocupados/total_asientos)*100)
-    valor_km = total_venta / kilometraje
+    valor_km = 30
 
-    %{
-      "tasa_ocupacion_cama" => calcula_ocupacion_cama(params, total_asientos),
-      "tasa_ocupacion_semicama" => calcula_ocupacion_semi(params, total_asientos),
-      "tasa_ocupacion_ejecutivo" => calcula_ocupacion_ejecutivo(params, total_asientos),
-      "tasa_ocupacion_supersalon" => calcula_ocupacion_supersalon(params, total_asientos),
-      "total_asientos_cama" => calcula_total_asientos_cama(params),
-      "total_asientos_semicama" => calcula_total_asientos_semicama(params),
-      "total_asientos_ejecutivo" => calcula_total_asientos_ejecutivo(params),
-      "total_asientos_supersalon" => calcula_total_asientos_supersalon(params),
-      "total_asientos_cama_ocupados" => calcula_asientos_cama_ocupados(params, total_asientos),
-      "total_asientos_semicama_ocupados" => calcula_asientos_semicama_ocupados(params, total_asientos),
-      "total_asientos_ejecutivo_ocupados" => calcula_asientos_ejecutivos_ocupados(params, total_asientos),
-      "total_asientos_supersalon_ocupados" => calcula_asientos_supersalon_ocupados(params, total_asientos),
-      "total_venta" => total_venta,
-      "valor_km" => valor_km,
-      "kilometraje" => kilometraje,
-      "total_asientos_ocupados" => total_ocupados,
-      "total_asientos" => total_asientos,
-      "total_disponibles" => total_disponibles,
-      "tasa_total" => tasa_total
-    }
+    tasa_ocupacion_cama = calcula_ocupacion_cama(params, total_asientos)
+    total_asientos_cama = calcula_total_asientos_cama(params)
+    total_asientos_cama_ocupados = calcula_asientos_cama_ocupados(params, total_asientos)
+
+    tasa_ocupacion_semicama = calcula_ocupacion_semi(params, total_asientos)
+    total_asientos_semicama = calcula_total_asientos_semicama(params)
+    total_asientos_semicama_ocupados = calcula_asientos_semicama_ocupados(params, total_asientos)
+
+    tasa_ocupacion_ejecutivo = calcula_ocupacion_ejecutivo(params, total_asientos)
+    total_asientos_ejecutivo = calcula_total_asientos_ejecutivo(params)
+    total_asientos_ejecutivo_ocupados = calcula_asientos_ejecutivos_ocupados(params, total_asientos)
+
+    tasa_ocupacion_supersalon = calcula_ocupacion_supersalon(params, total_asientos)
+    total_asientos_supersalon = calcula_total_asientos_supersalon(params)
+    total_asientos_supersalon_ocupados = calcula_asientos_supersalon_ocupados(params, total_asientos)
+
+
+    if tipo_segundo == "" do
+      tasa_ocupacion_vacio = ocupados_segundo_piso
+      total_asientos_vacios = calcula_total_asientos_por_piso(grilla, "2")
+      total_asientos_vacios_ocupados = calcula_total_asientos_ocupados_por_piso(grilla, "2")
+
+      case tipo_primer do
+        "SALON CAMA" ->
+          tasa_ocupacion_cama = tasa_ocupacion_cama + tasa_ocupacion_vacio
+          total_asientos_cama = total_asientos_vacios + total_asientos_cama
+          total_asientos_cama_ocupados = total_asientos_cama_ocupados + total_asientos_vacios_ocupados
+
+          %{
+            "tasa_ocupacion_cama" => tasa_ocupacion_cama,
+            "tasa_ocupacion_semicama" => tasa_ocupacion_semicama,
+            "tasa_ocupacion_ejecutivo" => tasa_ocupacion_ejecutivo,
+            "tasa_ocupacion_supersalon" => tasa_ocupacion_supersalon,
+            "total_asientos_cama" => total_asientos_cama,
+            "total_asientos_semicama" => total_asientos_semicama,
+            "total_asientos_ejecutivo" => total_asientos_ejecutivo,
+            "total_asientos_supersalon" => total_asientos_supersalon,
+            "total_asientos_cama_ocupados" => total_asientos_cama_ocupados,
+            "total_asientos_semicama_ocupados" => total_asientos_semicama_ocupados,
+            "total_asientos_ejecutivo_ocupados" => total_asientos_ejecutivo_ocupados,
+            "total_asientos_supersalon_ocupados" => total_asientos_supersalon_ocupados,
+            "total_venta" => total_venta,
+            "valor_km" => valor_km,
+            "kilometraje" => kilometraje,
+            "total_asientos_ocupados" => total_ocupados,
+            "total_asientos" => total_asientos,
+            "total_disponibles" => total_disponibles,
+            "tasa_total" => tasa_total
+          }
+        "SEMI CAMA" -> 
+          tasa_ocupacion_semicama = tasa_ocupacion_semicama  + tasa_ocupacion_vacio
+          total_asientos_semicama = total_asientos_semicama + total_asientos_vacios
+          total_asientos_semicama_ocupados = total_asientos_semicama_ocupados + total_asientos_vacios_ocupados
+
+          %{
+            "tasa_ocupacion_cama" => tasa_ocupacion_cama,
+            "tasa_ocupacion_semicama" => tasa_ocupacion_semicama,
+            "tasa_ocupacion_ejecutivo" => tasa_ocupacion_ejecutivo,
+            "tasa_ocupacion_supersalon" => tasa_ocupacion_supersalon,
+            "total_asientos_cama" => total_asientos_cama,
+            "total_asientos_semicama" => total_asientos_semicama,
+            "total_asientos_ejecutivo" => total_asientos_ejecutivo,
+            "total_asientos_supersalon" => total_asientos_supersalon,
+            "total_asientos_cama_ocupados" => total_asientos_cama_ocupados,
+            "total_asientos_semicama_ocupados" => total_asientos_semicama_ocupados,
+            "total_asientos_ejecutivo_ocupados" => total_asientos_ejecutivo_ocupados,
+            "total_asientos_supersalon_ocupados" => total_asientos_supersalon_ocupados,
+            "total_venta" => total_venta,
+            "valor_km" => valor_km,
+            "kilometraje" => kilometraje,
+            "total_asientos_ocupados" => total_ocupados,
+            "total_asientos" => total_asientos,
+            "total_disponibles" => total_disponibles,
+            "tasa_total" => tasa_total
+          }
+        "SUPER SALON" ->    
+          tasa_ocupacion_supersalon = tasa_ocupacion_supersalon + tasa_ocupacion_vacio
+          total_asientos_supersalon = total_asientos_supersalon + total_asientos_vacios
+          total_asientos_supersalon_ocupados = total_asientos_supersalon_ocupados + total_asientos_vacios_ocupados
+
+          %{
+            "tasa_ocupacion_cama" => tasa_ocupacion_cama,
+            "tasa_ocupacion_semicama" => tasa_ocupacion_semicama,
+            "tasa_ocupacion_ejecutivo" => tasa_ocupacion_ejecutivo,
+            "tasa_ocupacion_supersalon" => tasa_ocupacion_supersalon,
+            "total_asientos_cama" => total_asientos_cama,
+            "total_asientos_semicama" => total_asientos_semicama,
+            "total_asientos_ejecutivo" => total_asientos_ejecutivo,
+            "total_asientos_supersalon" => total_asientos_supersalon,
+            "total_asientos_cama_ocupados" => total_asientos_cama_ocupados,
+            "total_asientos_semicama_ocupados" => total_asientos_semicama_ocupados,
+            "total_asientos_ejecutivo_ocupados" => total_asientos_ejecutivo_ocupados,
+            "total_asientos_supersalon_ocupados" => total_asientos_supersalon_ocupados,
+            "total_venta" => total_venta,
+            "valor_km" => valor_km,
+            "kilometraje" => kilometraje,
+            "total_asientos_ocupados" => total_ocupados,
+            "total_asientos" => total_asientos,
+            "total_disponibles" => total_disponibles,
+            "tasa_total" => tasa_total
+          }
+        "EJECUTIVO" ->
+          tasa_ocupacion_ejecutivo = tasa_ocupacion_ejecutivo + tasa_ocupacion_vacio
+          total_asientos_ejecutivo = total_asientos_ejecutivo + total_asientos_vacios
+          total_asientos_ejecutivo_ocupados = total_asientos_ejecutivo_ocupados + total_asientos_vacios_ocupados
+
+          %{
+            "tasa_ocupacion_cama" => tasa_ocupacion_cama,
+            "tasa_ocupacion_semicama" => tasa_ocupacion_semicama,
+            "tasa_ocupacion_ejecutivo" => tasa_ocupacion_ejecutivo,
+            "tasa_ocupacion_supersalon" => tasa_ocupacion_supersalon,
+            "total_asientos_cama" => total_asientos_cama,
+            "total_asientos_semicama" => total_asientos_semicama,
+            "total_asientos_ejecutivo" => total_asientos_ejecutivo,
+            "total_asientos_supersalon" => total_asientos_supersalon,
+            "total_asientos_cama_ocupados" => total_asientos_cama_ocupados,
+            "total_asientos_semicama_ocupados" => total_asientos_semicama_ocupados,
+            "total_asientos_ejecutivo_ocupados" => total_asientos_ejecutivo_ocupados,
+            "total_asientos_supersalon_ocupados" => total_asientos_supersalon_ocupados,
+            "total_venta" => total_venta,
+            "valor_km" => valor_km,
+            "kilometraje" => kilometraje,
+            "total_asientos_ocupados" => total_ocupados,
+            "total_asientos" => total_asientos,
+            "total_disponibles" => total_disponibles,
+            "tasa_total" => tasa_total
+          }
+      end
+    else
+      %{
+        "tasa_ocupacion_cama" => tasa_ocupacion_cama,
+        "tasa_ocupacion_semicama" => tasa_ocupacion_semicama,
+        "tasa_ocupacion_ejecutivo" => tasa_ocupacion_ejecutivo,
+        "tasa_ocupacion_supersalon" => tasa_ocupacion_supersalon,
+        "total_asientos_cama" => total_asientos_cama,
+        "total_asientos_semicama" => total_asientos_semicama,
+        "total_asientos_ejecutivo" => total_asientos_ejecutivo,
+        "total_asientos_supersalon" => total_asientos_supersalon,
+        "total_asientos_cama_ocupados" => total_asientos_cama_ocupados,
+        "total_asientos_semicama_ocupados" => total_asientos_semicama_ocupados,
+        "total_asientos_ejecutivo_ocupados" => total_asientos_ejecutivo_ocupados,
+        "total_asientos_supersalon_ocupados" => total_asientos_supersalon_ocupados,
+        "total_venta" => total_venta,
+        "valor_km" => valor_km,
+        "kilometraje" => kilometraje,
+        "total_asientos_ocupados" => total_ocupados,
+        "total_asientos" => total_asientos,
+        "total_disponibles" => total_disponibles,
+        "tasa_total" => tasa_total
+      }
+    end 
   end
 
   @doc """
