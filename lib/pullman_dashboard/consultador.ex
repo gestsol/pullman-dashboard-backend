@@ -271,7 +271,7 @@ defmodule PullmanDashboard.Consultador do
     disponibles_segundo_piso = calcula_total_asientos_disponibles_por_piso(grilla, "2")
     total_disponibles = disponibles_primer_piso + disponibles_segundo_piso
     total_venta = (valor_primer_piso*ocupados_primer_piso) + (valor_segundo_piso*ocupados_segundo_piso)
-    tasa_total = ((total_ocupados/total_asientos)*100)
+    tasa_total = ((total_ocupados/total_asientos)*100) |> Float.round(2)
     valor_km = 30
 
     tasa_ocupacion_cama = calcula_ocupacion_cama(params, total_asientos)
@@ -298,9 +298,10 @@ defmodule PullmanDashboard.Consultador do
 
       case tipo_primer do
         "SALON CAMA" ->
-          tasa_ocupacion_cama = tasa_ocupacion_cama + tasa_ocupacion_vacio
+          
           total_asientos_cama = total_asientos_vacios + total_asientos_cama
           total_asientos_cama_ocupados = total_asientos_cama_ocupados + total_asientos_vacios_ocupados
+          tasa_ocupacion_cama = (total_asientos_cama_ocupados / total_asientos_cama * 100) |> Float.round(2)
 
           %{
             "tasa_ocupacion_cama" => tasa_ocupacion_cama,
@@ -324,9 +325,10 @@ defmodule PullmanDashboard.Consultador do
             "tasa_total" => tasa_total
           }
         "SEMI CAMA" -> 
-          tasa_ocupacion_semicama = tasa_ocupacion_semicama  + tasa_ocupacion_vacio
+          
           total_asientos_semicama = total_asientos_semicama + total_asientos_vacios
           total_asientos_semicama_ocupados = total_asientos_semicama_ocupados + total_asientos_vacios_ocupados
+          tasa_ocupacion_semicama = (total_asientos_semicama_ocupados / total_asientos_semicama * 100) |> Float.round(2)
 
           %{
             "tasa_ocupacion_cama" => tasa_ocupacion_cama,
@@ -350,9 +352,9 @@ defmodule PullmanDashboard.Consultador do
             "tasa_total" => tasa_total
           }
         "SUPER SALON" ->    
-          tasa_ocupacion_supersalon = tasa_ocupacion_supersalon + tasa_ocupacion_vacio
           total_asientos_supersalon = total_asientos_supersalon + total_asientos_vacios
           total_asientos_supersalon_ocupados = total_asientos_supersalon_ocupados + total_asientos_vacios_ocupados
+          tasa_ocupacion_supersalon = (total_asientos_supersalon_ocupados / total_asientos_supersalon * 100) |> Float.round(2)
 
           %{
             "tasa_ocupacion_cama" => tasa_ocupacion_cama,
@@ -376,9 +378,9 @@ defmodule PullmanDashboard.Consultador do
             "tasa_total" => tasa_total
           }
         "EJECUTIVO" ->
-          tasa_ocupacion_ejecutivo = tasa_ocupacion_ejecutivo + tasa_ocupacion_vacio
           total_asientos_ejecutivo = total_asientos_ejecutivo + total_asientos_vacios
           total_asientos_ejecutivo_ocupados = total_asientos_ejecutivo_ocupados + total_asientos_vacios_ocupados
+          tasa_ocupacion_ejecutivo = (total_asientos_ejecutivo_ocupados / total_asientos_ejecutivo * 100) |> Float.round(2)
 
           %{
             "tasa_ocupacion_cama" => tasa_ocupacion_cama,
