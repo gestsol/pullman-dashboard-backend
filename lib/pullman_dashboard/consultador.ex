@@ -249,6 +249,7 @@ defmodule PullmanDashboard.Consultador do
         "asientos_cama_ocupados" => 10,
         "asientos_semicama_ocupados" => 1,
         "total_venta" => 123,
+        "valor_km" => 123,
         "kilometraje" => 123
 
       }
@@ -271,6 +272,7 @@ defmodule PullmanDashboard.Consultador do
     total_disponibles = disponibles_primer_piso + disponibles_segundo_piso
     total_venta = (valor_primer_piso*ocupados_primer_piso) + (valor_segundo_piso*ocupados_segundo_piso)
     tasa_total = ((total_ocupados/total_asientos)*100) |> Float.round(2)
+    valor_km = 30
 
     tasa_ocupacion_cama = calcula_ocupacion_cama(params, total_asientos)
     total_asientos_cama = calcula_total_asientos_cama(params)
@@ -315,6 +317,7 @@ defmodule PullmanDashboard.Consultador do
             "total_asientos_ejecutivo_ocupados" => total_asientos_ejecutivo_ocupados,
             "total_asientos_supersalon_ocupados" => total_asientos_supersalon_ocupados,
             "total_venta" => total_venta,
+            "valor_km" => valor_km,
             "kilometraje" => kilometraje,
             "total_asientos_ocupados" => total_ocupados,
             "total_asientos" => total_asientos,
@@ -341,6 +344,7 @@ defmodule PullmanDashboard.Consultador do
             "total_asientos_ejecutivo_ocupados" => total_asientos_ejecutivo_ocupados,
             "total_asientos_supersalon_ocupados" => total_asientos_supersalon_ocupados,
             "total_venta" => total_venta,
+            "valor_km" => valor_km,
             "kilometraje" => kilometraje,
             "total_asientos_ocupados" => total_ocupados,
             "total_asientos" => total_asientos,
@@ -366,6 +370,7 @@ defmodule PullmanDashboard.Consultador do
             "total_asientos_ejecutivo_ocupados" => total_asientos_ejecutivo_ocupados,
             "total_asientos_supersalon_ocupados" => total_asientos_supersalon_ocupados,
             "total_venta" => total_venta,
+            "valor_km" => valor_km,
             "kilometraje" => kilometraje,
             "total_asientos_ocupados" => total_ocupados,
             "total_asientos" => total_asientos,
@@ -391,6 +396,7 @@ defmodule PullmanDashboard.Consultador do
             "total_asientos_ejecutivo_ocupados" => total_asientos_ejecutivo_ocupados,
             "total_asientos_supersalon_ocupados" => total_asientos_supersalon_ocupados,
             "total_venta" => total_venta,
+            "valor_km" => valor_km,
             "kilometraje" => kilometraje,
             "total_asientos_ocupados" => total_ocupados,
             "total_asientos" => total_asientos,
@@ -413,6 +419,7 @@ defmodule PullmanDashboard.Consultador do
         "total_asientos_ejecutivo_ocupados" => total_asientos_ejecutivo_ocupados,
         "total_asientos_supersalon_ocupados" => total_asientos_supersalon_ocupados,
         "total_venta" => total_venta,
+        "valor_km" => valor_km,
         "kilometraje" => kilometraje,
         "total_asientos_ocupados" => total_ocupados,
         "total_asientos" => total_asientos,
