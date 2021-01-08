@@ -272,7 +272,7 @@ defmodule PullmanDashboard.Consultador do
     total_disponibles = disponibles_primer_piso + disponibles_segundo_piso
     total_venta = (valor_primer_piso*ocupados_primer_piso) + (valor_segundo_piso*ocupados_segundo_piso)
     tasa_total = ((total_ocupados/total_asientos)*100) |> Float.round(2)
-    valor_km = if is_nil(kilometraje), do: nil , else: (total_venta/kilometraje)
+    valor_km = if is_nil(kilometraje), do: nil , else: (total_venta/kilometraje) |> Float.round(2)
 
     tasa_ocupacion_cama = calcula_ocupacion_cama(params, total_asientos)
     total_asientos_cama = calcula_total_asientos_cama(params)
